@@ -8,8 +8,7 @@
    ```
 2. Create `.env` from `.env.example` and set backend URL:
    ```env
-   VITE_API_BASE_URL=/api
-   VITE_PROXY_TARGET=http://localhost:8080
+   VITE_API_BASE_URL=https://smart-developer-growth-platform-production.up.railway.app
    ```
 3. Start dev server:
    ```bash
@@ -26,4 +25,4 @@ npm run build
 
 - User creation sends a placeholder password (`Temp@12345`) because the current backend requires `password` in `/users`.
 - All dashboard sections use Axios and call the backend APIs directly.
-- Default local setup uses Vite proxy (`/api`) to avoid browser CORS issues.
+- Environment variables are loaded through `import.meta.env` (Vite-compatible for Vercel).
