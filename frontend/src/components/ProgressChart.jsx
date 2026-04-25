@@ -1,44 +1,32 @@
-import {
-    PieChart,
-    Pie,
-    Cell,
-    Tooltip,
-    Legend,
-    ResponsiveContainer
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
-const COLORS = ["#22c55e", "#facc15"];
+const COLORS = ["#22c55e", "#eab308"];
 
-export default function ProgressChart({ completed, pending }) {
+export default function ProgressChart({ completed, total }) {
+    const pending = total - completed;
+
     const data = [
         { name: "Completed", value: completed },
-        { name: "Pending", value: pending }
+        { name: "Pending", value: pending },
     ];
 
     return (
-        <div className="bg-white rounded-2xl p-5 shadow-md">
-            <h3 className="text-lg font-semibold mb-3">Progress Overview</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                    <Pie
-                        data={data}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({ percent }) =>
-                            `${(percent * 100).toFixed(0)}%`
-                        }
-                    >
-                        {data.map((entry, index) => (
-                            <Cell key={index} fill={COLORS[index]} />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                </PieChart>
-            </ResponsiveContainer>
-        </div>
+        <PieChart width={300} height={250}>
+            <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                dataKey="value"
+                labelLine={false}
+                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            >
+                {data.map((entry, index) => (
+                    <Cell key={index} fill={COLORS[index]} />
+                ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+        </PieChart>
     );
 }

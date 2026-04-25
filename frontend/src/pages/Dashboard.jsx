@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   completeTask,
@@ -9,7 +9,9 @@ import {
   getWeakness
 } from "../api/platformApi";
 import { clearAuthData, getStoredUser } from "../auth/storage";
-import ProgressChart from "../components/ProgressChart"; // ✅ ADDED
+
+import ProgressChart from "../components/ProgressChart";
+import WeeklyProgressChart from "../components/WeeklyProgressChart";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -20,29 +22,7 @@ function Dashboard() {
   const [weakness, setWeakness] = useState({});
   const [insight, setInsight] = useState(null);
 
-  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [completingTaskId, setCompletingTaskId] = useState(null);
-  const [isPending, startTransition] = useTransition();
-
-  const [statusMessage, setStatusMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  function getErrorMessage(error) {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "Request failed."
-    );
-  }
-
   async function refreshDashboard() {
-    if (!user?.email) return;
-
-    setErrorMessage("");
-    setIsRefreshing(true);
-
     try {
       const [tasksData, progressData, weaknessData, insightData] =
           await Promise.all([
@@ -52,78 +32,57 @@ function Dashboard() {
             getInsight()
           ]);
 
-      startTransition(() => {
-        setTasks(tasksData);
-        setProgress(progressData);
-        setWeakness(weaknessData);
-        setInsight(insightData);
-      });
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsRefreshing(false);
+      setTasks(tasksData);
+      setProgress(progressData);
+      setWeakness(weaknessData);
+      setInsight(insightData);
+    } catch (e) {
+      console.error(e);
     }
   }
 
   useEffect(() => {
     if (!user?.email) {
       clearAuthData();
-      navigate("/login", { replace: true });
+      navigate("/login");
       return;
     }
     refreshDashboard();
-  }, [navigate, user?.email]);
+  }, []);
 
   async function handleGenerateTasks() {
-    if (!user?.email) return;
-
-    setErrorMessage("");
-    setStatusMessage("");
-    setIsGeneratingTasks(true);
-
-    try {
-      const generatedTasks = await generateTasks();
-
-      if (generatedTasks.length === 0) {
-        setStatusMessage(
-            "No new tasks generated. Today's recommendations already exist."
-        );
-      } else {
-        setStatusMessage(`${generatedTasks.length} tasks generated.`);
-      }
-
-      await refreshDashboard();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setIsGeneratingTasks(false);
-    }
+    await generateTasks();
+    refreshDashboard();
   }
 
-  async function handleMarkTaskAsDone(taskId) {
-    setErrorMessage("");
-    setStatusMessage("");
-    setCompletingTaskId(taskId);
-
-    try {
-      await completeTask(taskId);
-      await refreshDashboard();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error));
-    } finally {
-      setCompletingTaskId(null);
-    }
+  async function handleMarkTaskAsDone(id) {
+    await completeTask(id);
+    refreshDashboard();
   }
 
   function handleLogout() {
     clearAuthData();
-    navigate("/login", { replace: true });
+    navigate("/login");
   }
 
-  const weaknessEntries = Object.entries(weakness);
+  const totalTasks = progress?.totalTasks ?? 0;
+  const completedTasks = progress?.completedTasks ?? 0;
+  const completionPercent = progress?.completionPercentage ?? 0;
+
+  // 🔥 Weekly Dummy Data (later backend se aayega)
+  const weeklyData = [
+    { day: "Mon", progress: 20 },
+    { day: "Tue", progress: 40 },
+    { day: "Wed", progress: 60 },
+    { day: "Thu", progress: 70 },
+    { day: "Fri", progress: 80 },
+    { day: "Sat", progress: 90 },
+    { day: "Sun", progress: completionPercent },
+  ];
 
   return (
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-8">
+
         {/* HEADER */}
         <header className="mb-6 rounded-2xl bg-white p-5 shadow">
           <h1 className="text-2xl font-bold">Developer Performance Dashboard</h1>
@@ -141,85 +100,71 @@ function Dashboard() {
 
         {/* ACTIONS */}
         <div className="mb-6 flex gap-3">
-          <button
-              onClick={refreshDashboard}
-              className="rounded bg-gray-200 px-4 py-2"
-          >
+          <button onClick={refreshDashboard} className="rounded bg-gray-200 px-4 py-2">
             Refresh
           </button>
 
-          <button
-              onClick={handleGenerateTasks}
-              className="rounded bg-green-500 px-4 py-2 text-white"
-          >
+          <button onClick={handleGenerateTasks} className="rounded bg-green-500 px-4 py-2 text-white">
             Generate Tasks
           </button>
         </div>
 
         {/* METRICS */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <MetricCard label="Total Tasks" value={progress?.totalTasks ?? 0} />
-          <MetricCard
-              label="Completed"
-              value={progress?.completedTasks ?? 0}
-          />
-          <MetricCard
-              label="Completion %"
-              value={`${progress?.completionPercentage ?? 0}%`}
-          />
+          <MetricCard label="Total Tasks" value={totalTasks} />
+          <MetricCard label="Completed" value={completedTasks} />
+          <MetricCard label="Completion %" value={`${completionPercent}%`} />
         </div>
 
-        {/* 🔥 PROGRESS CHART */}
-        <div className="mb-6">
-          <ProgressChart
-              completed={progress?.completedTasks ?? 0}
-              pending={
-                  (progress?.totalTasks ?? 0) -
-                  (progress?.completedTasks ?? 0)
-              }
-          />
+        {/* 🔥 PROGRESS OVERVIEW (FIXED) */}
+        <div className="bg-white p-6 rounded-2xl shadow mb-6">
+          <h2 className="text-lg font-semibold mb-4">Progress Overview</h2>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+
+            {/* LEFT PIE */}
+            <ProgressChart
+                completed={completedTasks}
+                total={totalTasks}
+            />
+
+            {/* RIGHT WEEKLY GRAPH */}
+            <WeeklyProgressChart data={weeklyData} />
+
+          </div>
         </div>
 
         {/* TASK LIST */}
         <div className="mb-6 rounded-2xl bg-white p-5 shadow">
           <h2 className="text-lg font-semibold mb-3">Task List</h2>
 
-          {tasks.length === 0 ? (
-              <p>No tasks</p>
-          ) : (
-              tasks.map((task) => (
-                  <div
-                      key={task.id}
-                      className="mb-3 rounded border p-3 flex justify-between"
-                  >
-                    <div>
-                      <p className="font-semibold">{task.title}</p>
-                      <p className="text-sm text-gray-500">{task.category}</p>
-                    </div>
+          {tasks.map(task => (
+              <div key={task.id} className="mb-3 flex justify-between border p-3 rounded">
+                <div>
+                  <p className="font-semibold">{task.title}</p>
+                  <p className="text-sm text-gray-500">{task.category}</p>
+                </div>
 
-                    {task.status === "DONE" ? (
-                        <span className="text-green-600 font-bold">DONE</span>
-                    ) : (
-                        <button
-                            onClick={() => handleMarkTaskAsDone(task.id)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded"
-                        >
-                          Mark Done
-                        </button>
-                    )}
-                  </div>
-              ))
-          )}
+                {task.status === "DONE" ? (
+                    <span className="text-green-600 font-bold">DONE</span>
+                ) : (
+                    <button
+                        onClick={() => handleMarkTaskAsDone(task.id)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                    >
+                      Mark Done
+                    </button>
+                )}
+              </div>
+          ))}
         </div>
 
         {/* WEAKNESS */}
         <div className="mb-6 rounded-2xl bg-white p-5 shadow">
           <h2 className="text-lg font-semibold">Weakness</h2>
 
-          {weaknessEntries.map(([key, val]) => (
-              <p key={key}>
-                {key}: {val.status}
-              </p>
+          {Object.entries(weakness).map(([key, val]) => (
+              <p key={key}>{key}: {val.status}</p>
           ))}
         </div>
 
@@ -228,6 +173,7 @@ function Dashboard() {
           <h2 className="text-lg font-semibold">AI Insight</h2>
           <p>{insight?.insight}</p>
         </div>
+
       </div>
   );
 }
