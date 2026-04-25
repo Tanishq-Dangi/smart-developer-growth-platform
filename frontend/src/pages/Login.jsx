@@ -99,9 +99,6 @@ function Login() {
             Create account
           </Link>
         </p>
-        <p className="mt-3 rounded-full bg-slateBlue-50 px-3 py-2 text-xs font-semibold text-slateBlue-700">
-          API Base URL: {baseURL}
-        </p>
       </div>
     </div>
   );
