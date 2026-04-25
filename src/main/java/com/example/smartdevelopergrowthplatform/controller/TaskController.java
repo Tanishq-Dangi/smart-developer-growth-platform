@@ -6,6 +6,8 @@ import com.example.smartdevelopergrowthplatform.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tasks")
+@PreAuthorize("isAuthenticated()")
 public class TaskController {
 
     private final TaskService taskService;
@@ -32,9 +35,10 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TaskResponseDTO>> getTasksByUserId(@PathVariable Long userId) {
-        List<TaskResponseDTO> taskResponseDTOS = taskService.getTasksByUserId(userId);
+    @GetMapping
+    public ResponseEntity<List<TaskResponseDTO>> getMyTasks(Authentication authentication) {
+        String email = authentication.getName();
+        List<TaskResponseDTO> taskResponseDTOS = taskService.getTasksByEmail(email);
         return ResponseEntity.ok(taskResponseDTOS);
     }
 
@@ -44,9 +48,10 @@ public class TaskController {
         return ResponseEntity.ok(updatedTask);
     }
 
-    @PostMapping("/generate/{userId}")
-    public ResponseEntity<List<TaskResponseDTO>> generateTasksForUser(@PathVariable Long userId) {
-        List<TaskResponseDTO> generatedTasks = taskService.generateTasksForUser(userId);
+    @PostMapping("/generate")
+    public ResponseEntity<List<TaskResponseDTO>> generateTasksForUser(Authentication authentication) {
+        String email = authentication.getName();
+        List<TaskResponseDTO> generatedTasks = taskService.generateTasksByEmail(email);
         return ResponseEntity.status(HttpStatus.CREATED).body(generatedTasks);
     }
 }

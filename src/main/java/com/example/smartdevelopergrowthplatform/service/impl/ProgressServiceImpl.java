@@ -2,6 +2,7 @@ package com.example.smartdevelopergrowthplatform.service.impl;
 
 import com.example.smartdevelopergrowthplatform.dto.ProgressResponseDTO;
 import com.example.smartdevelopergrowthplatform.entity.TaskStatus;
+import com.example.smartdevelopergrowthplatform.entity.User;
 import com.example.smartdevelopergrowthplatform.exception.ResourceNotFoundException;
 import com.example.smartdevelopergrowthplatform.repository.TaskRepository;
 import com.example.smartdevelopergrowthplatform.repository.UserRepository;
@@ -17,6 +18,13 @@ public class ProgressServiceImpl implements ProgressService {
     public ProgressServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public ProgressResponseDTO getProgressByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return getUserProgress(user.getId());
     }
 
     @Override

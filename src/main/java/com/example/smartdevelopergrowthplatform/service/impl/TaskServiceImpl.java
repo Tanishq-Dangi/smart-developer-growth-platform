@@ -61,6 +61,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public List<TaskResponseDTO> getTasksByEmail(String email) {
+        Long userId = getUserIdByEmail(email);
+        return getTasksByUserId(userId);
+    }
+
+    @Override
     public TaskResponseDTO markTaskAsComplete(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
@@ -107,6 +113,18 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.saveAll(tasksToCreate).stream()
                 .map(this::mapToTaskResponseDTO)
                 .toList();
+    }
+
+    @Override
+    public List<TaskResponseDTO> generateTasksByEmail(String email) {
+        Long userId = getUserIdByEmail(email);
+        return generateTasksForUser(userId);
+    }
+
+    private Long getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email))
+                .getId();
     }
 
     private String normalizeTitle(String title) {

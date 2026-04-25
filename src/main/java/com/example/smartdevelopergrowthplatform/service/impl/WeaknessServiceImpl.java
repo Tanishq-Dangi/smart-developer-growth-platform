@@ -3,6 +3,7 @@ package com.example.smartdevelopergrowthplatform.service.impl;
 import com.example.smartdevelopergrowthplatform.dto.WeaknessDetailDTO;
 import com.example.smartdevelopergrowthplatform.entity.Task;
 import com.example.smartdevelopergrowthplatform.entity.TaskStatus;
+import com.example.smartdevelopergrowthplatform.entity.User;
 import com.example.smartdevelopergrowthplatform.exception.ResourceNotFoundException;
 import com.example.smartdevelopergrowthplatform.repository.TaskRepository;
 import com.example.smartdevelopergrowthplatform.repository.UserRepository;
@@ -25,6 +26,13 @@ public class WeaknessServiceImpl implements WeaknessService {
     public WeaknessServiceImpl(TaskRepository taskRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public Map<String, WeaknessDetailDTO> analyzeWeaknessByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return analyzeWeakness(user.getId());
     }
 
     @Override

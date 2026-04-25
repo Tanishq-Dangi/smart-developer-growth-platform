@@ -3,13 +3,15 @@ package com.example.smartdevelopergrowthplatform.controller;
 import com.example.smartdevelopergrowthplatform.dto.ProgressResponseDTO;
 import com.example.smartdevelopergrowthplatform.service.ProgressService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/progress")
+@PreAuthorize("isAuthenticated()")
 public class ProgressController {
 
     private final ProgressService progressService;
@@ -18,9 +20,10 @@ public class ProgressController {
         this.progressService = progressService;
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ProgressResponseDTO> getUserProgress(@PathVariable Long userId) {
-        ProgressResponseDTO progressResponseDTO = progressService.getUserProgress(userId);
+    @GetMapping
+    public ResponseEntity<ProgressResponseDTO> getUserProgress(Authentication authentication) {
+        String email = authentication.getName();
+        ProgressResponseDTO progressResponseDTO = progressService.getProgressByEmail(email);
         return ResponseEntity.ok(progressResponseDTO);
     }
 }

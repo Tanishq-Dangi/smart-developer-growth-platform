@@ -3,6 +3,9 @@ package com.example.smartdevelopergrowthplatform.service.impl;
 import com.example.smartdevelopergrowthplatform.dto.InsightResponseDTO;
 import com.example.smartdevelopergrowthplatform.dto.ProgressResponseDTO;
 import com.example.smartdevelopergrowthplatform.dto.WeaknessDetailDTO;
+import com.example.smartdevelopergrowthplatform.entity.User;
+import com.example.smartdevelopergrowthplatform.exception.ResourceNotFoundException;
+import com.example.smartdevelopergrowthplatform.repository.UserRepository;
 import com.example.smartdevelopergrowthplatform.service.InsightService;
 import com.example.smartdevelopergrowthplatform.service.ProgressService;
 import com.example.smartdevelopergrowthplatform.service.WeaknessService;
@@ -18,15 +21,30 @@ public class InsightServiceImpl implements InsightService {
     private final ProgressService progressService;
     private final WeaknessService weaknessService;
     private final InsightMessageGenerator insightMessageGenerator;
+    private final UserRepository userRepository;
 
     public InsightServiceImpl(
             ProgressService progressService,
             WeaknessService weaknessService,
-            InsightMessageGenerator insightMessageGenerator
+            InsightMessageGenerator insightMessageGenerator,
+            UserRepository userRepository
     ) {
         this.progressService = progressService;
         this.weaknessService = weaknessService;
         this.insightMessageGenerator = insightMessageGenerator;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public String generateInsightByEmail(String email) {
+        User user = findUserByEmail(email);
+        return generateInsight(user.getId());
+    }
+
+    @Override
+    public InsightResponseDTO getInsightByEmail(String email) {
+        User user = findUserByEmail(email);
+        return getInsight(user.getId());
     }
 
     @Override
@@ -56,5 +74,10 @@ public class InsightServiceImpl implements InsightService {
                 .map(Map.Entry::getKey)
                 .sorted()
                 .toList();
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
     }
 }

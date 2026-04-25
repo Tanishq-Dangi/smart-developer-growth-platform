@@ -7,15 +7,18 @@ import com.example.smartdevelopergrowthplatform.exception.BadRequestException;
 import com.example.smartdevelopergrowthplatform.exception.ResourceNotFoundException;
 import com.example.smartdevelopergrowthplatform.repository.UserRepository;
 import com.example.smartdevelopergrowthplatform.service.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -27,7 +30,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setName(userRequestDTO.getName());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         user.setGoal(userRequestDTO.getGoal());
         user.setLevel(userRequestDTO.getLevel());
 
