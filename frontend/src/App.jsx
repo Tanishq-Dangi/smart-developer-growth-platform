@@ -1,6 +1,7 @@
 import { useState, useTransition } from "react";
 import { baseURL } from "./api/client";
 import {
+  completeTask,
   createUser,
   generateTasks,
   getInsight,
@@ -29,6 +30,7 @@ function App() {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [completingTaskId, setCompletingTaskId] = useState(null);
   const [isPending, startTransition] = useTransition();
 
   const [statusMessage, setStatusMessage] = useState("");
@@ -130,6 +132,22 @@ function App() {
     }
     setStatusMessage(`Loaded dashboard for user ${activeUserId}.`);
     await refreshDashboard(activeUserId);
+  }
+
+  async function handleMarkTaskAsDone(taskId) {
+    setErrorMessage("");
+    setStatusMessage("");
+    setCompletingTaskId(taskId);
+
+    try {
+      const updatedTask = await completeTask(taskId);
+      setStatusMessage(`Task marked as done: ${updatedTask.title}`);
+      await refreshDashboard(updatedTask.userId);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setCompletingTaskId(null);
+    }
   }
 
   const weaknessEntries = Object.entries(weakness);
@@ -308,13 +326,23 @@ function App() {
                             : "bg-amberSoft-100 text-amber-800"
                         }`}
                       >
-                        {task.status}
+                        {task.status === "DONE" ? "✅ DONE" : "PENDING"}
                       </span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Tag>{task.category}</Tag>
                       <Tag>{task.createdAt?.slice(0, 10)}</Tag>
                     </div>
+                    {task.status !== "DONE" && (
+                      <button
+                        type="button"
+                        onClick={() => handleMarkTaskAsDone(task.id)}
+                        disabled={completingTaskId === task.id}
+                        className="mt-3 rounded-xl bg-slateBlue-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slateBlue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {completingTaskId === task.id ? "Marking..." : "Mark as Done"}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

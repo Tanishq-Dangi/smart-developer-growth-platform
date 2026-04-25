@@ -5,7 +5,6 @@ import com.example.smartdevelopergrowthplatform.dto.TaskResponseDTO;
 import com.example.smartdevelopergrowthplatform.entity.Task;
 import com.example.smartdevelopergrowthplatform.entity.TaskStatus;
 import com.example.smartdevelopergrowthplatform.entity.User;
-import com.example.smartdevelopergrowthplatform.exception.BadRequestException;
 import com.example.smartdevelopergrowthplatform.exception.ResourceNotFoundException;
 import com.example.smartdevelopergrowthplatform.repository.TaskRepository;
 import com.example.smartdevelopergrowthplatform.repository.UserRepository;
@@ -62,20 +61,16 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskResponseDTO markTaskAsDone(Long taskId, Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
+    public TaskResponseDTO markTaskAsComplete(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
 
-        if (!task.getUser().getId().equals(userId)) {
-            throw new BadRequestException("Task with id " + taskId + " does not belong to user id " + userId);
+        if (task.getStatus() == TaskStatus.PENDING) {
+            task.setStatus(TaskStatus.DONE);
+            task = taskRepository.save(task);
         }
 
-        task.setStatus(TaskStatus.DONE);
-        Task updatedTask = taskRepository.save(task);
-        return mapToTaskResponseDTO(updatedTask);
+        return mapToTaskResponseDTO(task);
     }
 
     @Override

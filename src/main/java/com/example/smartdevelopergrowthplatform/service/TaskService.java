@@ -10,7 +10,7 @@ public interface TaskService {
 
     List<TaskResponseDTO> getTasksByUserId(Long userId);
 
-    TaskResponseDTO markTaskAsDone(Long taskId, Long userId);
+    TaskResponseDTO markTaskAsComplete(Long taskId);
 
     List<TaskResponseDTO> generateTasksForUser(Long userId);
 }

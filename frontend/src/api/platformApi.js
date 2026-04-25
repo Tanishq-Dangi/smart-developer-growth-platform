@@ -15,6 +15,11 @@ export async function getTasks(userId) {
   return response.data;
 }
 
+export async function completeTask(taskId) {
+  const response = await apiClient.put(`/tasks/${taskId}/complete`);
+  return response.data;
+}
+
 export async function getProgress(userId) {
   const response = await apiClient.get(`/progress/${userId}`);
   return response.data;

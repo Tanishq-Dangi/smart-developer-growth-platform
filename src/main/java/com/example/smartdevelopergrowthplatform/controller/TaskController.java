@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,8 +39,8 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}/complete")
-    public ResponseEntity<TaskResponseDTO> markTaskAsDone(@PathVariable Long taskId, @RequestParam Long userId) {
-        TaskResponseDTO updatedTask = taskService.markTaskAsDone(taskId, userId);
+    public ResponseEntity<TaskResponseDTO> markTaskAsComplete(@PathVariable Long taskId) {
+        TaskResponseDTO updatedTask = taskService.markTaskAsComplete(taskId);
         return ResponseEntity.ok(updatedTask);
     }
 
